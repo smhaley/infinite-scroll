@@ -1,8 +1,31 @@
-import React from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import styled from "styled-components";
-import "./App.css";
 import { useQuery, gql } from "@apollo/client";
-// import {useInfiniteScroll, useIntersectionObserver} from './hooks'
+import { useIntersectionObserver } from "./hooks";
+
+export const Nav = styled.nav`
+  background: #0147fa;
+  height: 80px;
+  display: flex;
+  top: 0;
+  justify-content: space-between;
+  z-index: 10;
+  position: fixed;
+  width: 100%;
+  height: 70px;
+  box-shadow: 0 8px 10px -8px rgba(0, 0, 0, 0.3);
+`;
+
+export const NavLogo = styled.div`
+  color: white;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  padding-left: 2rem;
+  height: 100%;
+  font-size: 1.5rem;
+  font-weight: 700;
+`;
 
 const Card = styled.div`
   margin: 20px;
@@ -18,34 +41,39 @@ const Card = styled.div`
   }
 `;
 
+const Heading = styled.div`
+  margin-top: 120px;
+  padding-left: 20px;
+  padding-right: 20px;
+  font-size: 1.5rem;
+  text-align: center;
+`;
+
+export const FooterDiv = styled.div`
+  margin-top: 1rem;
+  padding: 1rem;
+  position: relative;
+  bottom: 0;
+  left: 0;
+  height: 60px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+`;
+
 const CardContainer = styled.div`
   padding: 2px 16px;
   min-height: 160px;
-`;
-
-const Button = styled.button`
-  text-align: center;
-  background: lightblue;
-  color: blue;
-  font-size: 1.1em;
-  padding: 0.5em 0.7em;
-  border: 1px solid blue;
-  border-radius: 2px;
-  transition: 0.1s ease-in-out;
-  &:active {
-    color: lightblue;
-    background-color: blue;
-  }
 `;
 
 interface CharacterVars {
   page: number;
 }
 
-const AppContainer = styled.section`
+const ContentContainer = styled.section`
   display: flex;
+  padding: 50px;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   min-height: 100vh;
 `;
@@ -60,6 +88,7 @@ const RickContainer = styled.div`
 
 interface Info {
   next: number;
+  pages: number;
 }
 
 interface Location {
@@ -88,8 +117,9 @@ const GET_CHARACTERS = gql`
     characters(page: $page) {
       info {
         __typename
-      next
-    }
+        next
+        pages
+      }
       results {
         id
         name
@@ -103,29 +133,14 @@ const GET_CHARACTERS = gql`
   }
 `;
 
-function CharacterList() {
+interface Props {
+  loading: boolean;
+  data: CharacteryData | undefined;
+}
 
-  const { loading, data, fetchMore } = useQuery<CharacteryData, CharacterVars>(
-    GET_CHARACTERS,
-    {
-      variables: { page: 1 },
-    }
-  );
-
-  const getMore = () => {
-    if (data) {
-      const { next } = data.characters.info;
-      console.log(next);
-      data &&
-        fetchMore({
-          variables: { page: next},
-        });
-    }
-  };
-
+const CharacterList: React.FC<Props> = ({ loading, data }) => {
   return (
     <div>
-      <h3>Slick Rick.</h3>
       {loading ? (
         <p>Loading ...</p>
       ) : (
@@ -133,8 +148,8 @@ function CharacterList() {
           <RickContainer>
             {data &&
               data.characters.results.map((val) => (
-                <Card key={val.id + val.name}>
-                  <img src={val.image} alt={val.name}></img>
+                <Card key={val.id + val.name + "card"}>
+                  <img src={val.image} alt={val.name} />
                   <CardContainer key={val.id + val.name + "container"}>
                     <h4>
                       <b>{val.name}</b>
@@ -149,23 +164,63 @@ function CharacterList() {
                 </Card>
               ))}
           </RickContainer>
-          <Button type="button" onClick={getMore}>
-            Get More
-          </Button>
         </>
       )}
     </div>
   );
-}
+};
 
-function App() {
-  return (
-    <AppContainer>
-      <RickContainer>
-        <CharacterList />
-      </RickContainer>
-    </AppContainer>
+const App = () => {
+  const [stop, setStop] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const entry = useIntersectionObserver(ref, {});
+  const isVisible = !!entry?.isIntersecting;
+
+  const { loading, data, fetchMore } = useQuery<CharacteryData, CharacterVars>(
+    GET_CHARACTERS,
+    {
+      variables: { page: 1 },
+    }
   );
-}
+
+  const getMore = useCallback(() => {
+    if (data) {
+      const { next } = data.characters.info;
+      if (data && next && !loading) {
+        fetchMore({
+          variables: { page: next },
+        });
+      } else if (!next) {
+        setStop(true);
+      }
+    }
+  }, [data, loading, fetchMore]);
+
+  useEffect(() => {
+    if (isVisible) {
+      getMore();
+    }
+  }, [isVisible, getMore]);
+
+  return (
+    <>
+      <Nav>
+        <NavLogo>Slick Rick.</NavLogo>
+      </Nav>
+      <Heading>
+        Infinite Scroll using: <b>Appolo Client V3</b> &{" "}
+        <b>Intersection Observer</b>
+      </Heading>
+      <ContentContainer>
+        <CharacterList loading={loading} data={data} />
+      </ContentContainer>
+      {stop ? (
+        <FooterDiv>That's All!</FooterDiv>
+      ) : (
+        <FooterDiv ref={ref}>Bottom</FooterDiv>
+      )}
+    </>
+  );
+};
 
 export default App;
