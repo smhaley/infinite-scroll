@@ -1,38 +1,11 @@
 import { useEffect, useState, useRef, RefObject } from "react";
 
-interface Options {
-  callback: () => Promise<unknown>;
-  element: HTMLElement | null;
-}
-
-export const useInfiniteScroll = ({ callback, element }: Options) => {
-  const [isFetching, setIsFetching] = useState(false);
-  const observer = useRef<IntersectionObserver>();
-
-  useEffect(() => {
-    if (!element) {
-      return;
-    }
-
-    observer.current = new IntersectionObserver((entries) => {
-      if (!isFetching && entries[0].isIntersecting) {
-        setIsFetching(true);
-        callback().finally(() => setIsFetching(false));
-      }
-    });
-    observer.current.observe(element);
-
-    return () => observer.current?.disconnect();
-  }, [callback, isFetching, element]);
-
-  return isFetching;
-};
-
 interface Args extends IntersectionObserverInit {
   freezeOnceVisible?: boolean;
 }
 
 export function useIntersectionObserver(
+  //from: https://usehooks-typescript.com/react-hook/use-intersection-observer
   elementRef: RefObject<Element>,
   {
     threshold = 0,
@@ -50,7 +23,6 @@ export function useIntersectionObserver(
   };
 
   useEffect(() => {
-      console.log('fire')
     const node = elementRef?.current; // DOM Ref
 
     const hasIOSupport = !!window.IntersectionObserver;
