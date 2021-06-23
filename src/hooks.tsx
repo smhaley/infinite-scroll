@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, RefObject } from "react";
+import { useEffect, useState, RefObject } from "react";
 
 interface Args extends IntersectionObserverInit {
   freezeOnceVisible?: boolean;
@@ -23,7 +23,7 @@ export function useIntersectionObserver(
   };
 
   useEffect(() => {
-    const node = elementRef?.current; // DOM Ref
+    const node = elementRef?.current;
 
     const hasIOSupport = !!window.IntersectionObserver;
     if (!hasIOSupport || frozen || !node) return;

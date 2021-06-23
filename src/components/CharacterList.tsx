@@ -13,20 +13,11 @@ const CharacterList: React.FC<Props> = ({ networkStatus, data }) => {
 
   const handleShow = () => {
     lenRef.current++;
-    data && console.log(lenRef.current, data.characters.results.length);
     data &&
       lenRef.current === data.characters.results.length &&
       setCounter(lenRef.current);
   };
 
-  {
-    networkStatus === 3 ||
-      (data && lenRef.current === data.characters.results.length && (
-        <p>Loading more ...</p>
-      ));
-  }
-
-  console.log(data && data);
   return (
     <div>
       {networkStatus === 1 ? (
@@ -57,12 +48,6 @@ const CharacterList: React.FC<Props> = ({ networkStatus, data }) => {
           </RickContainer>
         </>
       )}
-      {/* {networkStatus === 3 ||
-        (data && lenRef.current  && (
-          <div style={{ height: "500px", backgroundColor:'pink' }}>
-            <p>Loading ...</p>{" "}
-          </div>
-        ))} */}
     </div>
   );
 };
