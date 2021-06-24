@@ -37,7 +37,6 @@ const content = {
 
 const App = () => {
   const [stop, setStop] = useState(false);
-  const [loadMore, setLoadMore] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   const entry = useIntersectionObserver(ref, {});
   const isVisible = !!entry?.isIntersecting;
@@ -47,13 +46,11 @@ const App = () => {
     CharacterVars
   >(GET_CHARACTERS, {
     variables: { page: 1 },
+
     notifyOnNetworkStatusChange: true,
   });
-  console.log("render", "loading", networkStatus);
 
   const isRefetching = networkStatus === 3;
-
-  console.log("isRefetching", isRefetching);
 
   const getMore = useCallback(() => {
     if (data) {
